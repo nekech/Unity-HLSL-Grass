@@ -157,9 +157,7 @@
 
         float3x3 windRotation = getTransformationMatrixAngleAxis3x3(3.14 * windSample * grassVertexPosition.y, wind);
 
-        float3x3 facingRotationMatrix = getTransformationMatrixAngleAxis3x3(rand3dTo1d(grassPositionData.position), float3(0, 1, 0));
-
-        float3x3 bendRotationMatrix = getTransformationMatrixAngleAxis3x3(rand3dTo1d(grassPositionData.position.zzx) * _BendRotationRandom * UNITY_PI * 0.5, float3(-1, 0, 0)); //TODO remove or explain
+        float3x3 facingRotationMatrix = getTransformationMatrixAngleAxis3x3(rand3dTo1d(grassPositionData.position) * UNITY_PI * -0.5, float3(0, 1, 0));
 
         float3 binormal = grassPositionData.binormal;
         float3 normal = grassPositionData.normal;
@@ -174,22 +172,18 @@
             tangent.z, normal.z, binormal.z
         );
 
-        //float3x3 transformationMatrix = mul(bendRotationMatrix, facingRotationMatrix);
+        float3x3 transformationMatrix = mul(windRotation, facingRotationMatrix);
 
-        //transformationMatrix = mul(windRotation, transformationMatrix);
+        float3 positionOS = mul(localToTangent, grassVertexPosition);
 
-        float3x3 transformationMatrix = windRotation;
-
-        transformationMatrix = mul(localToTangent, transformationMatrix);
-
-        float3 positionOS = mul(transformationMatrix, grassVertexPosition) + grassPositionData.position;
-        float4 positionWS = mul(_LocalToWorld, float4(positionOS, 1.0));
+        positionOS = mul(transformationMatrix, positionOS) + grassPositionData.position;
 
         VertexInfo output = (VertexInfo)0;
 
         output.position = positionOS;
 
         output.normal = mul(localToTangent, grassVertexData.normal);
+        output.normal = mul(transformationMatrix, grassVertexData.normal);
 
         output.uv = grassVertexData.uv;
 
@@ -298,7 +292,7 @@
             {
                 float3 positionWS = transformObjectToWorld(positionOS);
                 float3 normalWS = transformObjectToWorldNormal(normalOS);
-
+                
                 float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
 
                 #if UNITY_REVERSED_Z
