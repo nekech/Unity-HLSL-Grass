@@ -89,7 +89,7 @@
         return normalWS;
     }
 
-    struct v2f //TODO create 2 structs
+    struct v2f
     {
         float4 vertex : SV_POSITION;
         float3 normal: NORMAL;

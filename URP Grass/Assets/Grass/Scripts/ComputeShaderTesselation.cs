@@ -13,28 +13,15 @@ public class ComputeShaderTesselation
 
         MeshBuffers newMesh = new MeshBuffers(mesh.triangles.Length * subCoef, mesh.triangles.Length * subCoef);
 
-        ComputeBuffer OrigVertices = new ComputeBuffer(mesh.vertices.Length, sizeof(float) * 3);
-        OrigVertices.SetData(mesh.vertices);
-
-        ComputeBuffer OrigNormals = new ComputeBuffer(mesh.normals.Length, sizeof(float) * 3);
-        OrigNormals.SetData(mesh.normals);
-
-        ComputeBuffer OrigTangents = new ComputeBuffer(mesh.tangents.Length, sizeof(float) * 4);
-        OrigTangents.SetData(mesh.tangents);
-
-        ComputeBuffer OrigTriangles = new ComputeBuffer(mesh.triangles.Length, sizeof(int));
-        OrigTriangles.SetData(mesh.triangles);
-
+        MeshBuffers origMesh = new MeshBuffers(mesh);
 
         kernel = Shader.FindKernel("Tessellation");
 
         Shader.SetBuffer(kernel, "Vertices", newMesh.vertices);
         Shader.SetBuffer(kernel, "Triangles", newMesh.triangles);
 
-        Shader.SetBuffer(kernel, "OrigVertices", OrigVertices);
-        Shader.SetBuffer(kernel, "OrigNormals", OrigNormals);
-        Shader.SetBuffer(kernel, "OrigTangents", OrigTangents);
-        Shader.SetBuffer(kernel, "OrigTriangles", OrigTriangles);
+        Shader.SetBuffer(kernel, "OrigVerticesData", origMesh.vertices);
+        Shader.SetBuffer(kernel, "OrigTriangles", origMesh.triangles);
 
         Shader.SetInt("SubDivisionsCount", subDivisionsCount);
 

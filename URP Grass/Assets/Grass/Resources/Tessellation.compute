@@ -12,9 +12,7 @@ struct Vertex
 RWStructuredBuffer<Vertex> Vertices;
 RWStructuredBuffer<int> Triangles;
 
-RWStructuredBuffer<float3> OrigVertices;
-RWStructuredBuffer<float3> OrigNormals;
-RWStructuredBuffer<float4> OrigTangents;
+RWStructuredBuffer<Vertex> OrigVerticesData;
 RWStructuredBuffer<int> OrigTriangles;
 
 int SubDivisionsCount;
@@ -64,17 +62,17 @@ void subd (in uint key , in float3 v_in[3] , out float3 v_out[3])
     v_out[2] = berp( v_in , u3 );
 }
 
-[numthreads(3,1,1)]
+[numthreads(8,1,1)]
 void Tessellation (uint3 id : SV_DispatchThreadID)
 {
     float3 triangleVertices[3];
 
-    triangleVertices[0] = OrigVertices[OrigTriangles[id.x * 3 + 0]];
-    triangleVertices[1] = OrigVertices[OrigTriangles[id.x * 3 + 1]];
-    triangleVertices[2] = OrigVertices[OrigTriangles[id.x * 3 + 2]];
+    triangleVertices[0] = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].position;
+    triangleVertices[1] = OrigVerticesData[OrigTriangles[id.x * 3 + 1]].position;
+    triangleVertices[2] = OrigVerticesData[OrigTriangles[id.x * 3 + 2]].position;
 
-    float3 origNormal = OrigNormals[OrigTriangles[id.x * 3 + 0]];
-    float4 origTangent = OrigTangents[OrigTriangles[id.x * 3 + 0]];
+    float3 origNormal = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].normal;
+    float4 origTangent = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].tangent;
 
     for (int i = 0; i < pow(2, SubDivisionsCount); ++i)
     {
