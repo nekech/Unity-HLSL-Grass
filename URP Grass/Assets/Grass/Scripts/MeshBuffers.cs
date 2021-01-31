@@ -21,6 +21,7 @@ public class MeshBuffers
             Normal = normal;
             UV = uv;
             Tangent = tangent;
+            //calculate binormal
             Binormal = Vector3.Cross(Normal, Tangent) * Tangent.w;
         }
     }
@@ -29,19 +30,26 @@ public class MeshBuffers
     public ComputeBuffer vertices {get; set;}
     //ComputeBuffer for store triangles vertices indexes
     public ComputeBuffer triangles {get; set;}
-    //Size of VertexData struct
+    //Size of VertexData struct, suf of size of each field
     public int VertexDataSize = sizeof(float)*3  + sizeof(float)*3 + sizeof(float)*2 + sizeof(float)*4 + sizeof(float)*3;
 
+    //Constructor for empty buffers
     public MeshBuffers(int verticesCount, int trianglesCount)
     {
+        //Initialise buffers
         InitBuffers(verticesCount, trianglesCount);
     }
+
+    //Constructor for buffers witd data of mesh
     public MeshBuffers(Mesh mesh)
     {
+        //Initialise buffers
         InitBuffers(mesh.vertices.Length, mesh.triangles.Length);
 
+        //Fill buffer of vertixes data
         SetVerticesData(mesh);
 
+        //Fill buffer of indexe
         triangles.SetData(mesh.triangles);
     }
 
