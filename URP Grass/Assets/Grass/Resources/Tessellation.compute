@@ -1,5 +1,6 @@
 ﻿#pragma kernel Tessellation
 
+//vertex data structure
 struct Vertex
 {
     float3 position;
@@ -9,14 +10,20 @@ struct Vertex
     float3 binormal;
 };
 
-RWStructuredBuffer<Vertex> Vertices;
-RWStructuredBuffer<int> Triangles;
-
+//buffer with vertex data of original mesh
 RWStructuredBuffer<Vertex> OrigVerticesData;
+//buffer with triangles of original mesh
 RWStructuredBuffer<int> OrigTriangles;
 
+//buffer for vertices data of result mesh
+RWStructuredBuffer<Vertex> Vertices;
+//buffer for triangles of result mesh
+RWStructuredBuffer<int> Triangles;
+
+//subdivision key
 int SubDivisionsCount;
 
+//get barycentric transformation matrix
 float3x3 bitToXform (in uint bit )
 {
     float s = float(bit) - 0.5f;
@@ -28,8 +35,10 @@ float3x3 bitToXform (in uint bit )
     return float3x3(r1, r2, r3);
 }
 
+//get barycentric transformation matrix from key of sub triangle
 float3x3 keyToXform (uint key )
 {
+    //identity matrix
     float3x3 xf = float3x3
     (
         1.0f, 0.0f, 0.0f,
@@ -37,6 +46,7 @@ float3x3 keyToXform (uint key )
         0.0f, 0.0f, 1.0f
     );
 
+    //for every bit in key combine transformation matrix
     while ( key > 1u)
     {
         xf = mul(bitToXform(key & 1u), xf);
@@ -46,17 +56,24 @@ float3x3 keyToXform (uint key )
     return xf;
 }
 
+//barycentric interpolation
 float3 berp (in float3 v[3] , in float2 u)
 {
     return v[0] + u.x * (v[1] - v[0]) + u.y * (v[2] - v[0]) ;
 }
 
+//compute vertices of sub triangle
 void subd (in uint key , in float3 v_in[3] , out float3 v_out[3])
 {
+    //compute barycentric transformation matrix
     float3x3 xf = keyToXform ( key ) ;
+
+    //compute barycentric coords of new sub trianlge
     float2 u1 = mul(xf, float3(0 , 0, 1)).xy ;
     float2 u2 = mul(xf, float3(1 , 0, 1)).xy ;
     float2 u3 = mul(xf, float3(0 , 1, 1)).xy ;
+
+    //compute vertices coordinate of sub triangle
     v_out[0] = berp( v_in , u1 );
     v_out[1] = berp( v_in , u2 );
     v_out[2] = berp( v_in , u3 );
@@ -65,23 +82,34 @@ void subd (in uint key , in float3 v_in[3] , out float3 v_out[3])
 [numthreads(8,1,1)]
 void Tessellation (uint3 id : SV_DispatchThreadID)
 {
+    //array for original triangle vertices
     float3 triangleVertices[3];
 
+    //fill array of original triangle vertices
     triangleVertices[0] = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].position;
     triangleVertices[1] = OrigVerticesData[OrigTriangles[id.x * 3 + 1]].position;
     triangleVertices[2] = OrigVerticesData[OrigTriangles[id.x * 3 + 2]].position;
 
+    //use original normal and tangent for new vertices
     float3 origNormal = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].normal;
     float4 origTangent = OrigVerticesData[OrigTriangles[id.x * 3 + 0]].tangent;
 
+    //compute binormal
+    float3 binormal = cross(origNormal, origTangent.xyz) * origTangent.w;
+
+    //iterate over subdivisions keys
     for (int i = 0; i < pow(2, SubDivisionsCount); ++i)
     {
+        //array for new sub vertices
         float3 subVertices[3];
 
+        //get vertices of subtriangle
         subd(i, triangleVertices, subVertices);
 
+        //calculate start index of current sub triagle vertices
         int verticesIndex = id.x*(3 * pow(2, SubDivisionsCount)) + i*3;
 
+        //fill result buffers with vertices data
         Vertices[verticesIndex + 0].position = subVertices[0];
         Triangles[verticesIndex + 0] = verticesIndex + 0;
 
@@ -98,8 +126,6 @@ void Tessellation (uint3 id : SV_DispatchThreadID)
         Vertices[verticesIndex + 0].tangent = origTangent;
         Vertices[verticesIndex + 1].tangent = origTangent;
         Vertices[verticesIndex + 2].tangent = origTangent;
-
-        float3 binormal = cross(origNormal, origTangent.xyz) * origTangent.w;
 
         Vertices[verticesIndex + 0].binormal = binormal;
         Vertices[verticesIndex + 1].binormal = binormal;
