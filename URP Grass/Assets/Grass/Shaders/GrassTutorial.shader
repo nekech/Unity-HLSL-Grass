@@ -173,7 +173,7 @@
         float2 wind_uv = grassPositionData.position.xz * _WindDistortionMap_ST.xy + _WindDistortionMap_ST.zw + _WindFrequency * _Time.y;
         //get wind value in current position
         float2 windSample = (tex2Dlod(_WindDistortionMap, float4(wind_uv, 0, 0)).rg * 2 - 1) * _WindStrength;
-        //create vector of wind in current position
+        //create vector of wind rotation in current position
         float3 wind = normalize(float3(windSample.x, 0, windSample.y));
 
         //get rotation matrix for blade of grass from wind
