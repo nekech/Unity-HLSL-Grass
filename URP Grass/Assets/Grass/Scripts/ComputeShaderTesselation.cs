@@ -9,10 +9,10 @@ public class ComputeShaderTesselation
     //define kernel handle
     int kernel;
     
-    public MeshBuffers GenerateTesselationMesh(Mesh mesh, int subDivisionsCount)
+    public MeshBuffers GenerateTesselationMesh(Mesh mesh, int subDivisionsLevel)
     {
         //calculate number of new trianggles per each triangle
-        int subCoef = (int)Mathf.Pow(2, subDivisionsCount);
+        int subCoef = (int)Mathf.Pow(2, subDivisionsLevel);
 
         //define buffers for new tessellate mesh
         MeshBuffers newMesh = new MeshBuffers(mesh.triangles.Length * subCoef, mesh.triangles.Length * subCoef);
@@ -34,7 +34,7 @@ public class ComputeShaderTesselation
         Shader.SetBuffer(kernel, "OrigTriangles", origMesh.triangles);
 
         //set subdivision coefficient
-        Shader.SetInt("SubDivisionsCount", subDivisionsCount);
+        Shader.SetInt("SubDivisionsLevel", subDivisionsLevel);
  
         uint threadGroupSize = 0;
         //get number of threads from tessellation shader

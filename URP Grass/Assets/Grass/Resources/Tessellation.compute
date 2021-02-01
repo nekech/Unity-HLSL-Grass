@@ -20,8 +20,8 @@ RWStructuredBuffer<Vertex> Vertices;
 //buffer for triangles of result mesh
 RWStructuredBuffer<int> Triangles;
 
-//subdivision key
-int SubDivisionsCount;
+//subdivision level
+int SubDivisionsLevel;
 
 //get barycentric transformation matrix
 float3x3 bitToXform (in uint bit )
@@ -98,7 +98,7 @@ void Tessellation (uint3 id : SV_DispatchThreadID)
     float3 binormal = cross(origNormal, origTangent.xyz) * origTangent.w;
 
     //iterate over subdivisions keys
-    for (int i = 0; i < pow(2, SubDivisionsCount); ++i)
+    for (int i = 0; i < pow(2, SubDivisionsLevel); ++i)
     {
         //array for new sub vertices
         float3 subVertices[3];
@@ -107,7 +107,7 @@ void Tessellation (uint3 id : SV_DispatchThreadID)
         subd(i, triangleVertices, subVertices);
 
         //calculate start index of current sub triagle vertices
-        int verticesIndex = id.x*(3 * pow(2, SubDivisionsCount)) + i*3;
+        int verticesIndex = id.x*(3 * pow(2, SubDivisionsLevel)) + i*3;
 
         //fill result buffers with vertices data
         Vertices[verticesIndex + 0].position = subVertices[0];
