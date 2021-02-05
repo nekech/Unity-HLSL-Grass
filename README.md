@@ -1,4 +1,4 @@
-Unity URP shader for drawing frass.
+Unity URP HLSL shader for drawing grass.
 HLSL syntax. Compatible with metal (OSX)
 Compute shader tessellation algorithm.
 https://protasovnn.com/2021/02/01/Unity-urp-hlsl-grass-shader/
